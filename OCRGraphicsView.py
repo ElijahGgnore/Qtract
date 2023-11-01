@@ -17,21 +17,33 @@ class MissingImagePathError(Exception):
 
 class WordRect(QGraphicsRectItem):
     def __init__(self, word, line_num, word_num, *args, **kwargs):
+        """
+        QGraphicsRectItem to store the information about the word detected at it's location
+        """
         super().__init__(*args, **kwargs)
-        self.setCursor(QCursor(Qt.IBeamCursor))
+
+        self.setCursor(QCursor(Qt.PointingHandCursor))
         self.setToolTip(word)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
 
-        self.word_rect_pen = QPen(QColor(255, 0, 0))
-        self.word_rect_pen.setWidth(2)
-        self.setPen(self.word_rect_pen)
-        self.selected_color = QColor(255, 0, 0, 100)
+        # Set default pen
+        rect_pen = QPen(Qt.red)
+        rect_pen.setWidth(2)
+        self.setPen(rect_pen)
+
+        self.selected_color = QColor(255, 0, 0, 100)  # Default brush color that's to be set when the word is selected
+
         self.word = word
-        # store the detected line and word numbers for easier text copying
+
+        # Store the detected line and word numbers for text copying according to the OCR engine
         self.line_num = line_num
         self.word_num = word_num
 
     def itemChange(self, change, value):
+        # TODO: find a way to overwrite the default dashed selection outline. Create custom rect by inheriting
+        #  QGraphicsItem?
+
+        #  Change brush color to the specified when the word is selected and back to transparent when unselected
         if change == QGraphicsItem.ItemSelectedChange:
             self.setBrush(QBrush(self.selected_color) if value else QBrush(Qt.transparent))
         return QGraphicsItem.itemChange(self, change, value)
@@ -40,21 +52,27 @@ class WordRect(QGraphicsRectItem):
 class OCRGraphicsView(QGraphicsView):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setEnabled(False)
+        self.setEnabled(False)  # Disable by default and only enable when an image is specified
         self.setFrameShape(QFrame.NoFrame)
         self.setFixedSize(100, 100)
+
+        # TODO: Make custom word selection instead of the default rubberband
         self.setDragMode(QGraphicsView.RubberBandDrag)
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
+
         self.current_image_path = None
         self.words = []
 
     def keyPressEvent(self, event):
         super().keyPressEvent(event)
+        # Select all words with A key and deselect all if alt is being held
         if event.key() == Qt.Key_A:
             select = False if event.modifiers() & Qt.AltModifier else True
             for r in self.words:
                 r.setSelected(select)
+
+        # The Ctrl + C copying behaviour
         if event.modifiers() & Qt.ControlModifier:
             if event.key() == Qt.Key_C:
                 lines = {}
@@ -69,7 +87,10 @@ class OCRGraphicsView(QGraphicsView):
                     QApplication.clipboard().setText('\n'.join(
                         ' '.join(w.word for w in sorted(lines[i], key=lambda w: w.word_num)) for i in sorted(lines)))
 
-    def set_image(self, image_path):
+    def set_new_image(self, image_path):
+        """
+        Resets the widget and sets a new image path
+        """
         self.clear()
         self.setEnabled(True)
         self.current_image_path = image_path
@@ -82,24 +103,37 @@ class OCRGraphicsView(QGraphicsView):
         self.scene.addItem(pic)
 
     def clear(self):
+        """
+        Resets the state of the widget
+        """
         self.setEnabled(False)
         self.scene.clear()
         self.words.clear()
+        self.current_image_path = None
 
     def remove_word_rects(self):
+        """
+        Remove the last generated word rectangles, but keep the current image
+        """
         for r in self.words:
             self.scene.removeItem(r)
         self.words.clear()
 
     def extract_text(self, min_confidence=90.0):
+        """
+        Attempt to extract text from the image at the current specified location and raise errors on failure
+        """
         if self.current_image_path is None:
             raise MissingImagePathError
         if not os.path.isfile(self.current_image_path):
             self.clear()
             raise ImageNotFoundError
+
         self.remove_word_rects()
+        # TODO: This requires pandas module. Implement with dictionaries to remove extra dependency
         detected_words = pytesseract.image_to_data(self.current_image_path, output_type=pytesseract.Output.DATAFRAME)
         detected_words = detected_words[detected_words['conf'] >= min_confidence]
+
         for index, row in detected_words.iterrows():
             word, line_num, word_num, x, y, w, h = row['text'], row['line_num'], row['word_num'], row['left'], \
                 row['top'], row['width'], row['height']

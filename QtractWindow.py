@@ -4,6 +4,9 @@ from Ui_QtractWindow import Ui_QtractWindow
 from OCRGraphicsView import ImageNotFoundError, MissingImagePathError
 
 
+# TODO: Language selection
+# TODO: Image filters
+# TODO: Screenshot OCR
 class QtractWindow(QMainWindow, Ui_QtractWindow):
     def __init__(self):
         super().__init__()
@@ -12,17 +15,20 @@ class QtractWindow(QMainWindow, Ui_QtractWindow):
         self.extract_text.pressed.connect(self.extract_current_image_text)
 
     def new_image_dialog(self):
+        """
+        Select the image path for an image that will be displayed and scanned for text
+        """
         file_name, _ = QFileDialog.getOpenFileName(
             self, "Open file", ".", "Image Files (*.png *.jpg *.bmp)"
         )
         if not file_name:
             return
-        self.load_new_image(file_name)
-
-    def load_new_image(self, file_name):
-        self.ocr_image.set_image(file_name)
+        self.ocr_image.set_new_image(file_name)
 
     def extract_current_image_text(self):
+        """
+        Attempt to extract text from the specified image and display message in the statusbar if an error occurred
+        """
         self.statusbar.clearMessage()
         try:
             self.ocr_image.extract_text(min_confidence=self.minimal_confidence.value())
@@ -30,3 +36,4 @@ class QtractWindow(QMainWindow, Ui_QtractWindow):
             self.statusbar.showMessage('No image was found at the specified location')
         except MissingImagePathError:
             self.statusbar.showMessage('Select an image location first')
+        # TODO: Catch the exception for the case when no tesseract executable could be found
