@@ -8,13 +8,17 @@ from pytesseract import TesseractNotFoundError
 # TODO: Language selection
 # TODO: Image filters
 # TODO: Screenshot OCR
+# TODO: Add a widget to preview the selected words' text
 class QtractWindow(QMainWindow, Ui_QtractWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
         self.select_image_location.pressed.connect(self.new_image_dialog)
         self.extract_text.pressed.connect(self.extract_current_image_text)
-        # TODO: Allow dynamic adjustment of the minimal confidence
+        self.minimal_confidence.valueChanged.connect(self.min_confidence_changed)
+
+    def min_confidence_changed(self):
+        self.ocr_image.filter_words(self.minimal_confidence.value())
 
     def new_image_dialog(self):
         """

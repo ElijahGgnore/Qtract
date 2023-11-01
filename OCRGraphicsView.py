@@ -16,7 +16,7 @@ class MissingImagePathError(Exception):
 
 
 class WordRect(QGraphicsRectItem):
-    def __init__(self, word, line_num, word_num, *args, **kwargs):
+    def __init__(self, word, line_num, word_num, confidence, *args, **kwargs):
         """
         QGraphicsRectItem to store the information about the word detected at it's location
         """
@@ -34,6 +34,7 @@ class WordRect(QGraphicsRectItem):
         self.selected_color = QColor(255, 0, 0, 100)  # Default brush color that's to be set when the word is selected
 
         self.word = word
+        self.confidence = confidence
 
         # Store the detected line and word numbers for text copying according to the OCR engine
         self.line_num = line_num
@@ -119,6 +120,13 @@ class OCRGraphicsView(QGraphicsView):
             self.scene.removeItem(r)
         self.words.clear()
 
+    def filter_words(self, min_confidence):
+        """
+        Enable only the words with confidence above or equal to the threshold
+        """
+        for w in self.words:
+            w.setVisible(w.confidence >= min_confidence)
+
     def extract_text(self, min_confidence=90.0):
         """
         Attempt to extract text from the image at the current specified location and raise errors on failure
@@ -132,12 +140,14 @@ class OCRGraphicsView(QGraphicsView):
         self.remove_word_rects()
         # TODO: This requires pandas module. Implement with dictionaries to remove extra dependency
         detected_words = pytesseract.image_to_data(self.current_image_path, output_type=pytesseract.Output.DATAFRAME)
-        detected_words = detected_words[detected_words['conf'] >= min_confidence]
+        detected_words = detected_words[detected_words['conf'] >= 0]
 
         for index, row in detected_words.iterrows():
-            word, line_num, word_num, x, y, w, h = row['text'], row['line_num'], row['word_num'], row['left'], \
-                row['top'], row['width'], row['height']
-            rect = WordRect(word, line_num, word_num, x, y, w, h)
+            word, line_num, word_num, confidence, x, y, w, h = row['text'], row['line_num'], row['word_num'], \
+                row['conf'], row['left'], row['top'], row['width'], row['height']
 
+            rect = WordRect(word, line_num, word_num, confidence, x, y, w, h)
             self.words.append(rect)
             self.scene.addItem(rect)
+
+        self.filter_words(min_confidence)
