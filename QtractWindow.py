@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QMainWindow, QFileDialog
 
 from Ui_QtractWindow import Ui_QtractWindow
 from OCRGraphicsView import ImageNotFoundError, MissingImagePathError
+from pytesseract import TesseractNotFoundError
 
 
 # TODO: Language selection
@@ -13,6 +14,7 @@ class QtractWindow(QMainWindow, Ui_QtractWindow):
         self.setupUi(self)
         self.select_image_location.pressed.connect(self.new_image_dialog)
         self.extract_text.pressed.connect(self.extract_current_image_text)
+        # TODO: Allow dynamic adjustment of the minimal confidence
 
     def new_image_dialog(self):
         """
@@ -33,7 +35,8 @@ class QtractWindow(QMainWindow, Ui_QtractWindow):
         try:
             self.ocr_image.extract_text(min_confidence=self.minimal_confidence.value())
         except ImageNotFoundError:
-            self.statusbar.showMessage('No image was found at the specified location')
+            self.statusbar.showMessage('No image was found at the specified location.')
         except MissingImagePathError:
-            self.statusbar.showMessage('Select an image location first')
-        # TODO: Catch the exception for the case when no tesseract executable could be found
+            self.statusbar.showMessage('Select an image location first.')
+        except TesseractNotFoundError:
+            self.statusbar.showMessage("Tesseract OCR is not installed or it's not in the PATH.")
