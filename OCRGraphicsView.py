@@ -138,11 +138,12 @@ class OCRGraphicsView(QGraphicsView):
             raise ImageNotFoundError
 
         self.remove_word_rects()
-        # TODO: This requires pandas module. Implement with dictionaries to remove extra dependency
-        detected_words = pytesseract.image_to_data(self.current_image_path, output_type=pytesseract.Output.DATAFRAME)
-        detected_words = detected_words[detected_words['conf'] >= 0]
 
-        for index, row in detected_words.iterrows():
+        detected_words = pytesseract.image_to_data(self.current_image_path, output_type=pytesseract.Output.DICT)
+        for i in range(len(detected_words['level'])):
+            row = {k: detected_words[k][i] for k in detected_words}
+            if row['conf'] < 0:
+                continue
             word, line_num, word_num, confidence, x, y, w, h = row['text'], row['line_num'], row['word_num'], \
                 row['conf'], row['left'], row['top'], row['width'], row['height']
 
