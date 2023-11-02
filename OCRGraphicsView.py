@@ -67,58 +67,78 @@ class OCRGraphicsView(QGraphicsView):
 
     def keyPressEvent(self, event):
         super().keyPressEvent(event)
-        # Select all words with A key and deselect all if alt is being held
+        # Select all words with Ctrl + A and deselect all with Alt + A
         if event.key() == Qt.Key_A:
-            select = False if event.modifiers() & Qt.AltModifier else True
-            for r in self.words:
-                r.setSelected(select)
+            if event.modifiers() == Qt.AltModifier:
+                self.set_words_selected(False)
+            elif event.modifiers() == Qt.ControlModifier:
+                self.set_words_selected(True)
 
         # The Ctrl + C copying behaviour
         if event.modifiers() & Qt.ControlModifier:
             if event.key() == Qt.Key_C:
-                lines = {}
-                for word in self.words:
-                    if word.isSelected():
-                        line = word.line_num
-                        if line in lines:
-                            lines[line].append(word)
-                        else:
-                            lines[line] = [word]
-                if lines:
-                    QApplication.clipboard().setText('\n'.join(
-                        ' '.join(w.word for w in sorted(lines[i], key=lambda w: w.word_num)) for i in sorted(lines)))
+                text = self.get_selected_text()
+                if text:
+                    QApplication.clipboard().setText(text)
+
+    def set_words_selected(self, selected):
+        for r in self.words:
+            r.setSelected(selected)
+
+    def get_selected_text(self):
+        """
+        :return: Selected words formatted according to the tesseract line and word prediction
+        """
+        lines = {}
+        for word in self.words:
+            if word.isSelected():
+                line = word.line_num
+                if line in lines:
+                    lines[line].append(word)
+                else:
+                    lines[line] = [word]
+        return '\n'.join(' '.join(w.word for w in sorted(lines[i], key=lambda w: w.word_num)) for i in sorted(lines))
 
     def set_new_image(self, image_path):
         """
         Resets the widget and sets a new image path
         """
-        self.clear()
+        self.reset()
         self.setEnabled(True)
         self.current_image_path = image_path
+
+        # Add the image
         pixmap = QPixmap(image_path)
-        pic = QGraphicsPixmapItem()
-        pic.setPixmap(pixmap)
+        item = QGraphicsPixmapItem()
+        item.setPixmap(pixmap)
+        self.scene.addItem(item)
+
+        # TODO: Remove the fixed size functionality and allow scrollbars to fit big images
+        # Fit the widget size to the image
         x, y, w, h = pixmap.rect().getRect()
         self.scene.setSceneRect(x, y, w, h)
         self.setFixedSize(w, h)
-        self.scene.addItem(pic)
 
-    def clear(self):
+    def reset(self):
         """
         Resets the state of the widget
         """
         self.setEnabled(False)
-        self.scene.clear()
+
+        # Clear the word list first and the scene next to avoid calling deleted items
         self.words.clear()
+        self.scene.clear()
+
         self.current_image_path = None
 
     def remove_word_rects(self):
         """
         Remove the last generated word rectangles, but keep the current image
         """
+        # Clear the word list first and only then delete the words from the scene to avoid calling deleted objects
+        self.words.clear()
         for r in self.words:
             self.scene.removeItem(r)
-        self.words.clear()
 
     def filter_words(self, min_confidence):
         """
@@ -134,7 +154,7 @@ class OCRGraphicsView(QGraphicsView):
         if self.current_image_path is None:
             raise MissingImagePathError
         if not os.path.isfile(self.current_image_path):
-            self.clear()
+            self.reset()
             raise ImageNotFoundError
 
         self.remove_word_rects()

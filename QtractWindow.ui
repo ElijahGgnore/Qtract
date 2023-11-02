@@ -149,17 +149,11 @@
        </layout>
       </item>
       <item>
-       <spacer name="verticalSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
+       <widget class="QTextBrowser" name="ocr_text_preview">
+        <property name="placeholderText">
+         <string>The selected text can be previewed here</string>
         </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
+       </widget>
       </item>
       <item>
        <widget class="QLabel" name="label_2">
@@ -170,7 +164,7 @@
          <enum>QFrame::Sunken</enum>
         </property>
         <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Left mouse click — select words&lt;/p&gt;&lt;p&gt;Left mouse drag — rubber band select words&lt;/p&gt;&lt;p&gt;Ctrl + left click / drag — add to the current selection&lt;/p&gt;&lt;p&gt;A — select all words&lt;/p&gt;&lt;p&gt;Alt A / left click on the background — deselect all words&lt;/p&gt;&lt;p&gt;Ctrl + C — copy selected words&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Left mouse click — select words&lt;/p&gt;&lt;p&gt;Left mouse drag — rubber band select words&lt;/p&gt;&lt;p&gt;Ctrl + left click / drag — add to the current selection&lt;/p&gt;&lt;p&gt;Ctrl + A — select all words&lt;/p&gt;&lt;p&gt;Alt A / left click on the background — deselect all words&lt;/p&gt;&lt;p&gt;Ctrl + C — copy selected words&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="textFormat">
          <enum>Qt::AutoText</enum>
