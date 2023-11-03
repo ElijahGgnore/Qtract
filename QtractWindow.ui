@@ -14,9 +14,9 @@
    <string>Qtract</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="5,0,2">
+   <layout class="QHBoxLayout" name="horizontalLayout_2">
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
+     <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0,0,1,0,0,0,0">
       <item>
        <widget class="Line" name="line_5">
         <property name="orientation">
@@ -54,13 +54,13 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>20</width>
-          <height>40</height>
+          <width>0</width>
+          <height>0</height>
          </size>
         </property>
        </spacer>
       </item>
-      <item alignment="Qt::AlignHCenter">
+      <item>
        <widget class="OCRGraphicsView" name="ocr_image"/>
       </item>
       <item>
@@ -70,8 +70,8 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>20</width>
-          <height>40</height>
+          <width>0</width>
+          <height>0</height>
          </size>
         </property>
        </spacer>
@@ -152,25 +152,6 @@
        <widget class="QTextBrowser" name="ocr_text_preview">
         <property name="placeholderText">
          <string>The selected text can be previewed here</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_2">
-        <property name="frameShape">
-         <enum>QFrame::Box</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Sunken</enum>
-        </property>
-        <property name="text">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Left mouse click — select words&lt;/p&gt;&lt;p&gt;Left mouse drag — rubber band select words&lt;/p&gt;&lt;p&gt;Ctrl + left click / drag — add to the current selection&lt;/p&gt;&lt;p&gt;Ctrl + A — select all words&lt;/p&gt;&lt;p&gt;Alt A / left click on the background — deselect all words&lt;/p&gt;&lt;p&gt;Ctrl + C — copy selected words&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="textFormat">
-         <enum>Qt::AutoText</enum>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
         </property>
        </widget>
       </item>

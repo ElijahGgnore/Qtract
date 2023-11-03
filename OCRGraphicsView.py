@@ -2,9 +2,11 @@ import os.path
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QColor, QPen, QCursor, QBrush
-from PyQt5.QtWidgets import QGraphicsView, QFrame, QGraphicsScene, QGraphicsPixmapItem, QGraphicsRectItem, \
-    QGraphicsItem, QApplication
+from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsItem, \
+    QApplication
 from pytesseract import pytesseract
+
+QWIDGETSIZE_MAX = 16777215  # This constant seems to be missing from Pyqt5.
 
 
 class ImageNotFoundError(Exception):
@@ -53,9 +55,11 @@ class WordRect(QGraphicsRectItem):
 class OCRGraphicsView(QGraphicsView):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setEnabled(False)  # Disable by default and only enable when an image is specified
-        self.setFrameShape(QFrame.NoFrame)
-        self.setFixedSize(100, 100)
+        self.hide()  # Hide by default and only enable when an image is specified
+
+        policy = self.sizePolicy()
+        policy.setRetainSizeWhenHidden(True)
+        self.setSizePolicy(policy)
 
         # TODO: Make custom word selection instead of the default rubberband
         self.setDragMode(QGraphicsView.RubberBandDrag)
@@ -67,6 +71,7 @@ class OCRGraphicsView(QGraphicsView):
 
     def keyPressEvent(self, event):
         super().keyPressEvent(event)
+        print(self.scene.items())
         # Select all words with Ctrl + A and deselect all with Alt + A
         if event.key() == Qt.Key_A:
             if event.modifiers() == Qt.AltModifier:
@@ -82,8 +87,8 @@ class OCRGraphicsView(QGraphicsView):
                     QApplication.clipboard().setText(text)
 
     def set_words_selected(self, selected):
-        for r in self.words:
-            r.setSelected(selected)
+        for word in self.words:
+            word.setSelected(selected)
 
     def get_selected_text(self):
         """
@@ -104,7 +109,7 @@ class OCRGraphicsView(QGraphicsView):
         Resets the widget and sets a new image path
         """
         self.reset()
-        self.setEnabled(True)
+        self.show()
         self.current_image_path = image_path
 
         # Add the image
@@ -113,17 +118,18 @@ class OCRGraphicsView(QGraphicsView):
         item.setPixmap(pixmap)
         self.scene.addItem(item)
 
-        # TODO: Remove the fixed size functionality and allow scrollbars to fit big images
-        # Fit the widget size to the image
         x, y, w, h = pixmap.rect().getRect()
         self.scene.setSceneRect(x, y, w, h)
-        self.setFixedSize(w, h)
+        frame_margin = self.frameWidth() * 2
+        # the scroll bars will always appear if the frame isn't taken into account for setting the maximum size
+        self.setMaximumSize(w + frame_margin, h + frame_margin)
 
     def reset(self):
         """
         Resets the state of the widget
         """
-        self.setEnabled(False)
+        self.hide()
+        self.setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX)
 
         # Clear the word list first and the scene next to avoid calling deleted items
         self.words.clear()
@@ -135,17 +141,17 @@ class OCRGraphicsView(QGraphicsView):
         """
         Remove the last generated word rectangles, but keep the current image
         """
-        # Clear the word list first and only then delete the words from the scene to avoid calling deleted objects
+        for word in self.words:
+            self.scene.removeItem(word)
         self.words.clear()
-        for r in self.words:
-            self.scene.removeItem(r)
+        self.scene.selectionChanged.emit()
 
     def filter_words(self, min_confidence):
         """
-        Enable only the words with confidence above or equal to the threshold
+        Show only the words with confidence above or equal to the threshold
         """
-        for w in self.words:
-            w.setVisible(w.confidence >= min_confidence)
+        for word in self.words:
+            word.setVisible(word.confidence >= min_confidence)
 
     def extract_text(self, min_confidence=90.0):
         """

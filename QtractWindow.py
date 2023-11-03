@@ -18,7 +18,13 @@ class QtractWindow(QMainWindow, Ui_QtractWindow):
         self.ocr_image.scene.selectionChanged.connect(self.word_selection_changed)
 
     def word_selection_changed(self):
-        self.ocr_text_preview.setText(self.ocr_image.get_selected_text())
+        # When the application closes, this method might get called after the graphics view and it's contents have
+        #  already been deleted.
+        # For now, it seems fine to simply catch the RuntimeError raised when calling deleted objects
+        try:
+            self.ocr_text_preview.setText(self.ocr_image.get_selected_text())
+        except RuntimeError:
+            pass
 
     def min_confidence_changed(self):
         self.ocr_image.filter_words(self.minimal_confidence.value())
@@ -42,6 +48,7 @@ class QtractWindow(QMainWindow, Ui_QtractWindow):
         self.statusbar.clearMessage()
         try:
             self.ocr_image.extract_text(min_confidence=self.minimal_confidence.value())
+            self.ocr_image.setFocus()
         except ImageNotFoundError:
             self.statusbar.showMessage('No image was found at the specified location.')
         except MissingImagePathError:
