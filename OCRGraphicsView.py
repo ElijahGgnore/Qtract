@@ -171,7 +171,7 @@ class OCRGraphicsView(QGraphicsView):
         for word in self.words:
             word.setVisible(word.confidence >= min_confidence)
 
-    def extract_text(self, min_confidence=90.0):
+    def extract_text(self, min_confidence=90.0, lang=''):
         """
         Attempt to extract text from the image at the current specified location and raise errors on failure
         """
@@ -183,7 +183,7 @@ class OCRGraphicsView(QGraphicsView):
 
         self.remove_word_rects()
 
-        detected_words = pytesseract.image_to_data(self.current_image_path, output_type=pytesseract.Output.DICT)
+        detected_words = pytesseract.image_to_data(self.current_image_path, lang=lang if lang else 'eng', output_type=pytesseract.Output.DICT)
         for i in range(len(detected_words['level'])):
             row = {k: detected_words[k][i] for k in detected_words}
             if row['conf'] < 0:

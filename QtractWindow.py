@@ -5,7 +5,6 @@ from OCRGraphicsView import ImageNotFoundError, MissingImagePathError
 from pytesseract import TesseractNotFoundError
 
 
-# TODO: Language selection
 # TODO: Image filters
 # TODO: Screenshot OCR
 # TODO: Implement selection of the tesseract OCR modes
@@ -18,6 +17,7 @@ class QtractWindow(QMainWindow, Ui_QtractWindow):
         self.minimal_confidence.valueChanged.connect(self.min_confidence_changed)
         self.ocr_image.scene.selectionChanged.connect(self.word_selection_changed)
         self.save_selected_text_button.pressed.connect(self.save_selected_text_dialog)
+        self.clear_languages_button.pressed.connect(lambda: self.language_list.set_checked_for_all(False))
 
     def word_selection_changed(self):
         text = self.ocr_image.selected_text
@@ -50,7 +50,8 @@ class QtractWindow(QMainWindow, Ui_QtractWindow):
         """
         self.statusbar.clearMessage()
         try:
-            self.ocr_image.extract_text(min_confidence=self.minimal_confidence.value())
+            self.ocr_image.extract_text(min_confidence=self.minimal_confidence.value(),
+                                        lang='+'.join(self.language_list.get_selected_options()))
             self.ocr_image.setFocus()
         except ImageNotFoundError:
             self.statusbar.showMessage('No image was found at the specified location.')
