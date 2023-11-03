@@ -8,6 +8,7 @@ from pytesseract import TesseractNotFoundError
 # TODO: Language selection
 # TODO: Image filters
 # TODO: Screenshot OCR
+# TODO: Implement selection of the tesseract OCR modes
 class QtractWindow(QMainWindow, Ui_QtractWindow):
     def __init__(self):
         super().__init__()
