@@ -8,24 +8,25 @@ from pytesseract import TesseractNotFoundError
 # TODO: Language selection
 # TODO: Image filters
 # TODO: Screenshot OCR
-# TODO: Implement saving text into a .txt file
 class QtractWindow(QMainWindow, Ui_QtractWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.select_image_location.pressed.connect(self.new_image_dialog)
-        self.extract_text.pressed.connect(self.extract_current_image_text)
+        self.select_image_location_button.pressed.connect(self.new_image_dialog)
+        self.extract_text_button.pressed.connect(self.extract_current_image_text)
         self.minimal_confidence.valueChanged.connect(self.min_confidence_changed)
         self.ocr_image.scene.selectionChanged.connect(self.word_selection_changed)
+        self.save_selected_text_button.pressed.connect(self.save_selected_text_dialog)
 
     def word_selection_changed(self):
-        # When the application closes, this method might get called after the graphics view and it's contents have
-        #  already been deleted.
-        # For now, it seems fine to simply catch the RuntimeError raised when calling deleted objects
-        try:
-            self.ocr_text_preview.setText(self.ocr_image.get_selected_text())
-        except RuntimeError:
-            pass
+        text = self.ocr_image.selected_text
+        self.ocr_text_preview.setText(text)
+        self.save_selected_text_button.setEnabled(True if text else False)
+
+    def save_selected_text_dialog(self):
+        file_name, _ = QFileDialog.getSaveFileName(self, 'Save selected text', '', "Text file (*.txt)")
+        with open(file_name.removesuffix('.txt') + '.txt', mode='w', encoding='UTF-8') as file:
+            file.write(self.ocr_image.selected_text)
 
     def min_confidence_changed(self):
         self.ocr_image.filter_words(self.minimal_confidence.value())

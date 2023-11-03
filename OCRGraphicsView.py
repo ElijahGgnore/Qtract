@@ -38,7 +38,7 @@ class WordRect(QGraphicsRectItem):
         self.word = word
         self.confidence = confidence
 
-        # Store the detected line and word numbers for text copying according to the OCR engine
+        # Store the predicted line and word numbers for text copying according to the OCR engine
         self.line_num = line_num
         self.word_num = word_num
 
@@ -57,6 +57,7 @@ class OCRGraphicsView(QGraphicsView):
     A widget that displays an image and places word rectangles detected with tesseract OCR over it.
     It also allows to select and copy the detected text in a format provided by tesseract.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.hide()  # Hide by default and only show when an image path is specified
@@ -73,6 +74,9 @@ class OCRGraphicsView(QGraphicsView):
         self.current_image_path = None
         self.words = []
 
+        self.selected_text = ''
+        self.scene.selectionChanged.connect(self.word_selection_changed)
+
     def keyPressEvent(self, event):
         super().keyPressEvent(event)
         # Select all words with Ctrl + A and deselect all with Alt + A
@@ -85,7 +89,7 @@ class OCRGraphicsView(QGraphicsView):
         # The Ctrl + C copying behaviour
         if event.modifiers() & Qt.ControlModifier:
             if event.key() == Qt.Key_C:
-                text = self.get_selected_text()
+                text = self.get_formatted_selected_text()
                 if text:
                     QApplication.clipboard().setText(text)
 
@@ -93,7 +97,17 @@ class OCRGraphicsView(QGraphicsView):
         for word in self.words:
             word.setSelected(selected)
 
-    def get_selected_text(self):
+    def word_selection_changed(self):
+        # When the application closes, this method might get called after the graphics view and it's contents have
+        #  already been deleted.
+        # For now, it seems fine to simply catch the RuntimeError raised when calling deleted objects
+        try:
+            # Every time the selection changes, get the newly selected text and store it to minimize calculations.
+            self.selected_text = self.get_formatted_selected_text()
+        except RuntimeError:
+            pass
+
+    def get_formatted_selected_text(self):
         """
         :return: Selected words formatted according to the tesseract line and word prediction
         """
@@ -139,6 +153,7 @@ class OCRGraphicsView(QGraphicsView):
         self.scene.clear()
 
         self.current_image_path = None
+        self.selected_text = ''
 
     def remove_word_rects(self):
         """
