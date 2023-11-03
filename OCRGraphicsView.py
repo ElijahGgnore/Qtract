@@ -20,7 +20,7 @@ class MissingImagePathError(Exception):
 class WordRect(QGraphicsRectItem):
     def __init__(self, word, line_num, word_num, confidence, *args, **kwargs):
         """
-        QGraphicsRectItem to store the information about the word detected at it's location
+        QGraphicsRectItem to store the information about the word detected at its location and to allow word selection
         """
         super().__init__(*args, **kwargs)
 
@@ -53,9 +53,13 @@ class WordRect(QGraphicsRectItem):
 
 
 class OCRGraphicsView(QGraphicsView):
+    """
+    A widget that displays an image and places word rectangles detected with tesseract OCR over it.
+    It also allows to select and copy the detected text in a format provided by tesseract.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.hide()  # Hide by default and only enable when an image is specified
+        self.hide()  # Hide by default and only show when an image path is specified
 
         policy = self.sizePolicy()
         policy.setRetainSizeWhenHidden(True)
@@ -71,7 +75,6 @@ class OCRGraphicsView(QGraphicsView):
 
     def keyPressEvent(self, event):
         super().keyPressEvent(event)
-        print(self.scene.items())
         # Select all words with Ctrl + A and deselect all with Alt + A
         if event.key() == Qt.Key_A:
             if event.modifiers() == Qt.AltModifier:
