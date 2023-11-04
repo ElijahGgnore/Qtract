@@ -1,11 +1,9 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QListWidgetItem, QListWidget
 
-from csv import reader
+from known_tesseract_language_options import known_tesseract_language_options as known_options
 
 from pytesseract import pytesseract
-
-LANGUAGE_OPTIONS_TSV_PATH = 'Known tesseract language options.tsv'
 
 
 class LanguageItem(QListWidgetItem):
@@ -29,11 +27,6 @@ class TesseractLanguageList(QListWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         available_options = pytesseract.get_languages()
-
-        with open(LANGUAGE_OPTIONS_TSV_PATH, 'r', newline='', encoding='UTF-8') as f:
-            r = reader(f, delimiter='\t')
-            next(r)
-            known_options = dict(r)
 
         self.languages = []
         for option in available_options:

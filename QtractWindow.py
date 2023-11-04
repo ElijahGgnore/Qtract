@@ -1,8 +1,7 @@
 from PyQt5.QtWidgets import QMainWindow, QFileDialog
 
-from Ui_QtractWindow import Ui_QtractWindow
 from OCRGraphicsView import ImageNotFoundError, MissingImagePathError
-from pytesseract import TesseractNotFoundError
+from Ui_QtractWindow import Ui_QtractWindow
 
 
 # TODO: Image filters
@@ -57,5 +56,3 @@ class QtractWindow(QMainWindow, Ui_QtractWindow):
             self.statusbar.showMessage('No image was found at the specified location.')
         except MissingImagePathError:
             self.statusbar.showMessage('Select an image location first.')
-        except TesseractNotFoundError:
-            self.statusbar.showMessage("Tesseract OCR is not installed or it's not in the PATH.")
