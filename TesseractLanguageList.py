@@ -8,16 +8,24 @@ from pytesseract import pytesseract
 LANGUAGE_OPTIONS_TSV_PATH = 'Known tesseract language options.tsv'
 
 
-# TODO: Documentation
 class LanguageItem(QListWidgetItem):
+    """
+    QListWidgetItem to store information about a tesseract language option
+    """
+
     def __init__(self, tesseract_option, description, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setText(f'{tesseract_option} - {description}')
         self.setCheckState(Qt.Unchecked)
         self.tesseract_option = tesseract_option
+        self.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
 
 
 class TesseractLanguageList(QListWidget):
+    """
+    QListWidget to store the available tesseract language options as items and to easily select and retrieve them
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         available_options = pytesseract.get_languages()
@@ -33,14 +41,12 @@ class TesseractLanguageList(QListWidget):
             self.addItem(item)
             self.languages.append(item)
 
-        self.itemPressed.connect(self.language_clicked)
-
-    def language_clicked(self, item):
-        item.setCheckState(Qt.Checked if item.checkState() == Qt.Unchecked else Qt.Unchecked)
-
     def set_checked_for_all(self, checked):
         for lang in self.languages:
             lang.setCheckState(Qt.Checked if checked else Qt.Unchecked)
 
     def get_selected_options(self):
+        """
+        :return: Selected tesseract OCR options
+        """
         return [lang.tesseract_option for lang in self.languages if lang.checkState() == Qt.Checked]
